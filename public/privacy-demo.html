@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why Privacy Matters - Interactive Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0f;
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      text-align: center;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #94a3b8;
+      margin-bottom: 50px;
+      font-size: 1.1rem;
+    }
+
+    .demo-section {
+      background: #111118;
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid #1e1e2e;
+    }
+
+    .demo-section h2 {
+      color: #8b5cf6;
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .demo-section h2::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #8b5cf6;
+      border-radius: 50%;
+    }
+
+    /* Network Visualization */
+    .network-demo {
+      position: relative;
+      height: 300px;
+      background: #0a0a0f;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .wallet-node {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+      padding: 5px;
+    }
+
+    .wallet-node.main {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      font-size: 0.8rem;
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.4);
+    }
+
+    .wallet-node.connected {
+      background: #1e1e2e;
+      border: 2px solid #8b5cf6;
+    }
+
+    .wallet-node.connected.exposed {
+      border-color: #ef4444;
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    }
+
+    .connection-line {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(90deg, #8b5cf6, transparent);
+      transform-origin: left center;
+      opacity: 0.6;
+    }
+
+    .connection-line.danger {
+      background: linear-gradient(90deg, #ef4444, transparent);
+    }
+
+    /* Controls */
+    .demo-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .demo-btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .demo-btn.primary {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: white;
+    }
+
+    .demo-btn.danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .demo-btn.secondary {
+      background: #1e1e2e;
+      color: #e2e8f0;
+      border: 1px solid #3f3f5a;
+    }
+
+    .demo-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    /* Timeline Demo */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px;
+      background: #0a0a0f;
+      border-radius: 10px;
+      border-left: 3px solid #3f3f5a;
+      transition: all 0.3s;
+    }
+
+    .timeline-item.exposed {
+      border-left-color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .timeline-item.private {
+      border-left-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .timeline-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .timeline-icon.exchange { background: #3b82f6; }
+    .timeline-icon.dex { background: #8b5cf6; }
+    .timeline-icon.nft { background: #ec4899; }
+    .timeline-icon.friend { background: #10b981; }
+
+    .timeline-content {
+      flex: 1;
+    }
+
+    .timeline-content h4 {
+      font-size: 0.95rem;
+      margin-bottom: 3px;
+    }
+
+    .timeline-content p {
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .timeline-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .timeline-badge.visible {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+
+    .timeline-badge.hidden {
+      background: rgba(16, 185, 129, 0.2);
+      color: #10b981;
+    }
+
+    /* Profile Card Demo */
+    .profile-demo {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .profile-demo { grid-template-columns: 1fr; }
+    }
+
+    .profile-card {
+      background: #0a0a0f;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #1e1e2e;
+    }
+
+    .profile-card h3 {
+      font-size: 1rem;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .profile-card.danger h3 { color: #ef4444; }
+    .profile-card.safe h3 { color: #10b981; }
+
+    .profile-stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #1e1e2e;
+      font-size: 0.85rem;
+    }
+
+    .profile-stat:last-child { border-bottom: none; }
+
+    .stat-label { color: #94a3b8; }
+    .stat-value { font-weight: 600; }
+    .stat-value.danger { color: #ef4444; }
+    .stat-value.hidden { color: #10b981; }
+
+    /* CTA */
+    .cta-section {
+      text-align: center;
+      padding: 40px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(99, 102, 241, 0.1));
+      border-radius: 16px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .cta-section h2 {
+      font-size: 1.8rem;
+      margin-bottom: 15px;
+    }
+
+    .cta-section p {
+      color: #94a3b8;
+      margin-bottom: 25px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .cta-buttons a {
+      padding: 14px 28px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .cta-buttons a.primary {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: white;
+    }
+
+    .cta-buttons a.secondary {
+      background: #1e1e2e;
+      color: #e2e8f0;
+      border: 1px solid #3f3f5a;
+    }
+
+    .cta-buttons a:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Animation */
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    .pulse { animation: pulse 2s infinite; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Your Wallet Has a Shadow</h1>
+    <p class="subtitle">See what surveillance platforms know about you</p>
+
+    <!-- Network Demo -->
+    <div class="demo-section">
+      <h2>How Wallets Get Linked</h2>
+      <p style="color: #94a3b8; margin-bottom: 20px; font-size: 0.9rem;">
+        Click "Add Transaction" to see how your wallet network grows and becomes trackable.
+      </p>
+      <div class="network-demo" id="networkDemo">
+        <div class="wallet-node main">Your<br>Wallet</div>
+      </div>
+      <div class="demo-controls">
+        <button class="demo-btn primary" onclick="addConnection()">Add Transaction</button>
+        <button class="demo-btn danger" onclick="exposeNetwork()">Expose Network</button>
+        <button class="demo-btn secondary" onclick="resetNetwork()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Timeline Demo -->
+    <div class="demo-section">
+      <h2>Public vs Private Transactions</h2>
+      <p style="color: #94a3b8; margin-bottom: 20px; font-size: 0.9rem;">
+        Every public transaction adds to your surveillance profile. Private execution breaks the chain.
+      </p>
+      <div class="timeline">
+        <div class="timeline-item exposed">
+          <div class="timeline-icon exchange">💱</div>
+          <div class="timeline-content">
+            <h4>Exchange Withdrawal</h4>
+            <p>Linked your identity to wallet address</p>
+          </div>
+          <span class="timeline-badge visible">Visible</span>
+        </div>
+        <div class="timeline-item exposed">
+          <div class="timeline-icon dex">🔄</div>
+          <div class="timeline-content">
+            <h4>DEX Swap - 500 SOL → BONK</h4>
+            <p>Trading strategy exposed to copy-traders</p>
+          </div>
+          <span class="timeline-badge visible">Visible</span>
+        </div>
+        <div class="timeline-item private">
+          <div class="timeline-icon" style="background: #8b5cf6;">🔒</div>
+          <div class="timeline-content">
+            <h4>Private Trade via encrypt.trade</h4>
+            <p>No mempool visibility, no front-running</p>
+          </div>
+          <span class="timeline-badge hidden">Private</span>
+        </div>
+        <div class="timeline-item exposed">
+          <div class="timeline-icon nft">🖼️</div>
+          <div class="timeline-content">
+            <h4>NFT Purchase</h4>
+            <p>Interests and holdings now public</p>
+          </div>
+          <span class="timeline-badge visible">Visible</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Comparison -->
+    <div class="demo-section">
+      <h2>What Surveillance Platforms See</h2>
+      <div class="profile-demo">
+        <div class="profile-card danger">
+          <h3>⚠️ Without Privacy</h3>
+          <div class="profile-stat">
+            <span class="stat-label">Identity</span>
+            <span class="stat-value danger">KNOWN</span>
+          </div>
+          <div class="profile-stat">
+            <span class="stat-label">Net Worth</span>
+            <span class="stat-value danger">$847,320</span>
+          </div>
+          <div class="profile-stat">
+            <span class="stat-label">Active Hours</span>
+            <span class="stat-value danger">9am-11pm EST</span>
+          </div>
+          <div class="profile-stat">
+            <span class="stat-label">Trading Style</span>
+            <span class="stat-value danger">Memecoin trader</span>
+          </div>
+          <div class="profile-stat">
+            <span class="stat-label">Linked Wallets</span>
+            <span class="stat-value danger">12 wallets</span>
+          </div>
+        </div>
+        <div class="profile-card safe">
+          <h3>✓ With Selective Privacy</h3>
+          <div class="profile-stat">
+            <span class="stat-label">Identity</span>
+            <span class="stat-value hidden">UNKNOWN</span>
+          </div>
+          <div class="profile-stat">
+            <span class="stat-label">Net Worth</span>
+            <span class="stat-value hidden">Hidden</span>
+          </div>
+          <div class="profile-stat">
+            <span class="stat-label">Active Hours</span>
+            <span class="stat-value hidden">Randomized</span>
+          </div>
+          <div class="profile-stat">
+            <span class="stat-label">Trading Style</span>
+            <span class="stat-value hidden">Not detectable</span>
+          </div>
+          <div class="profile-stat">
+            <span class="stat-label">Linked Wallets</span>
+            <span class="stat-value hidden">Chain broken</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <h2>Take Back Your Privacy</h2>
+      <p>Check your current exposure level, then trade privately with encrypt.trade.</p>
+      <div class="cta-buttons">
+        <a href="/" class="primary">Check Your Exposure →</a>
+        <a href="https://encrypt.trade" target="_blank" class="secondary">Try encrypt.trade ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const connections = [
+      { label: 'Exchange', angle: 30, distance: 120 },
+      { label: 'DEX', angle: 90, distance: 100 },
+      { label: 'Friend', angle: 150, distance: 130 },
+      { label: 'NFT', angle: 210, distance: 110 },
+      { label: 'DeFi', angle: 270, distance: 125 },
+      { label: 'Wallet 2', angle: 330, distance: 115 },
+    ];
+
+    let connectionIndex = 0;
+
+    function addConnection() {
+      if (connectionIndex >= connections.length) return;
+
+      const demo = document.getElementById('networkDemo');
+      const conn = connections[connectionIndex];
+      const centerX = demo.offsetWidth / 2;
+      const centerY = demo.offsetHeight / 2;
+
+      const rad = conn.angle * Math.PI / 180;
+      const x = centerX + Math.cos(rad) * conn.distance;
+      const y = centerY + Math.sin(rad) * conn.distance;
+
+      // Add line
+      const line = document.createElement('div');
+      line.className = 'connection-line';
+      line.style.left = centerX + 'px';
+      line.style.top = centerY + 'px';
+      line.style.width = conn.distance + 'px';
+      line.style.transform = `rotate(${conn.angle}deg)`;
+      demo.appendChild(line);
+
+      // Add node
+      const node = document.createElement('div');
+      node.className = 'wallet-node connected';
+      node.style.left = (x - 40) + 'px';
+      node.style.top = (y - 40) + 'px';
+      node.textContent = conn.label;
+      demo.appendChild(node);
+
+      connectionIndex++;
+    }
+
+    function exposeNetwork() {
+      document.querySelectorAll('.wallet-node.connected').forEach(node => {
+        node.classList.add('exposed');
+      });
+      document.querySelectorAll('.connection-line').forEach(line => {
+        line.classList.add('danger');
+      });
+    }
+
+    function resetNetwork() {
+      const demo = document.getElementById('networkDemo');
+      demo.querySelectorAll('.wallet-node.connected, .connection-line').forEach(el => el.remove());
+      connectionIndex = 0;
+    }
+  </script>
+</body>
+</html>

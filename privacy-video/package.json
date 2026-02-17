@@ -1,0 +1,24 @@
+{
+  "name": "privacy-video",
+  "version": "1.0.0",
+  "description": "Trace Privacy Explainer Video",
+  "scripts": {
+    "start": "remotion studio",
+    "build": "remotion render PrivacyExplainer out/privacy-explainer.mp4",
+    "preview": "remotion preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@remotion/cli": "^4.0.414",
+    "@remotion/player": "^4.0.414",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "^4.0.414"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "typescript": "^5.3.0"
+  }
+}
